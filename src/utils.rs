@@ -70,12 +70,24 @@ pub(crate) fn delete_index_cache(index_dir: &Path, dry_run: bool) -> Result<()> 
 pub(crate) fn get_size(path: &Path) -> Result<u64> {
     let mut total_size = 0;
     if path.is_dir() {
-        for entry in fs::read_dir(path)? {
+        for entry in
+            fs::read_dir(path).context(format!("{} is unreadable", path.to_string_lossy()))?
+        {
             let entry_path = entry?.path();
+            if entry_path.is_symlink() {
+                // no need to check symlinks.
+                continue;
+            }
             if entry_path.is_dir() {
                 total_size += get_size(&entry_path)?;
             } else {
-                total_size += entry_path.metadata()?.len();
+                total_size += entry_path
+                    .metadata()
+                    .context(format!(
+                        "can not get metadata of {}",
+                        entry_path.to_string_lossy()
+                    ))?
+                    .len();
             }
         }
     } else {

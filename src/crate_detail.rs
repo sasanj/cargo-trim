@@ -366,8 +366,10 @@ impl CrateDetail {
                     fs::read_dir(&entry).context("failed to read checkout dir sub folder")?
                 {
                     let git_sha_entry = git_sha_entry?.path();
-                    let crate_size =
-                        get_size(&git_sha_entry).context("failed to get folder size")?;
+                    let crate_size = get_size(&git_sha_entry).context(format!(
+                        "failed to get folder size of {}",
+                        git_sha_entry.to_string_lossy()
+                    ))?;
                     let git_sha_file_name = git_sha_entry
                         .file_name()
                         .context("failed to get file name")?;
